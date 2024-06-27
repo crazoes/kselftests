@@ -260,7 +260,7 @@ do_suspend()
 				return 1
 			fi
 
-			now=$(date %+s)
+			now=$(date +%s)
 			printf "SYSFS: $SYSFS $now"
 			echo $filename > $SYSFS/power/state
 			printf "Came out of RTC $1\n"
