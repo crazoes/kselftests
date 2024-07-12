@@ -233,37 +233,22 @@ do_suspend()
 		for i in `seq 1 $2`; do
 			printf "Starting $1\n"
 
+			if [ "$3" = "rtc" ]; then
+				if ! command -v rtcwake &> /dev/null; then
+					printf "rtcwake could not be found, please install it.\n"
+					return 1
+				fi
 
-			# Set the RTC wake alarm
-			now=$(date +%s)
-			wakeup_time=$((now + 15)) # Wake up after 15 seconds
+				sudo rtcwake -m $filename -s 15
 
-		        # Print current time and wakeup time for verification
-			printf "Current time: $(date -d @$now)\n"
-			printf "Wakeup time: $(date -d @$wakeup_time)\n"
-			printf "Wakeup time in UTC: $wakeup_time\n"
-			
-			echo $wakeup_time > /sys/class/rtc/rtc0/wakealarm
-
-			# Verify the wake alarm is set
-			if [ $? -ne 0 ]; then
-				printf "Failed to set RTC wake alarm\n"
-				return 1
+				if [ $? -ne 0 ]; then
+					printf "Failed to suspend using RTC wake alarm\n"
+					return 1
+				fi
 			fi
 
-			# Enable the RTC as a wakeup source
-			echo enabled > /sys/class/rtc/rtc0/device/power/wakeup
-
-			# Verify the wake alarm is set
-			if [ $? -ne 0 ]; then
-				printf "Failed to set RTC wake alarm\n"
-				return 1
-			fi
-
-			now=$(date +%s)
-			printf "SYSFS: $SYSFS $now"
 			echo $filename > $SYSFS/power/state
-			printf "Came out of RTC $1\n"
+			printf "Came out of $1\n"
 
 			printf "Do basic tests after finishing $1 to verify cpufreq state\n\n"
 			cpufreq_basic_tests
